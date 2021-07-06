@@ -8,10 +8,10 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace FromTestingBot
+namespace Order
 {
     public static class OnMessage
-    {
+    { 
         public static async void Bot_OnMessage(TelegramBotClient bot, MessageEventArgs e)
         {
             if (e.Message.Text != null)
@@ -20,7 +20,7 @@ namespace FromTestingBot
 
                 await bot.SendTextMessageAsync(
                     chatId: e.Message.Chat,
-                    text: "Это текст"
+                    text: "Это текст  :" + e.Message.Text
                 );
             }
             else
