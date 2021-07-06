@@ -3,17 +3,15 @@ using MongoDB.Driver;
 using System;
 using Telegram.Bot.Args;
 
-namespace Order
+namespace Wecker
 {
    
 
     class OnCallback
-    {
-        
-
-        public static async void BotOnCallbackQuery(object sender, CallbackQueryEventArgs e)
+    {     
+        public static void BotOnCallbackQuery(object sender, CallbackQueryEventArgs e)
         {
-            MessageEventArgs e1 = new MessageEventArgs(e.CallbackQuery.Message);
+            MessageEventArgs e1 = new(e.CallbackQuery.Message);
             string str = e.CallbackQuery.Data;
             string[] arr = str.Split(' ');
             switch (arr[0])
@@ -29,10 +27,8 @@ namespace Order
                 default:
                     e1.Message.Text = e.CallbackQuery.Data;
                     break;
-            }
-            
+            }          
             OnCommand.Bot_OnCommand(sender, e1);
-
         }
 
         static async void WorkloadCallback(CallbackQueryEventArgs e, string num)

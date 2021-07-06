@@ -3,7 +3,7 @@ using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 
-namespace Order
+namespace Wecker
 {
     class OnError
     {

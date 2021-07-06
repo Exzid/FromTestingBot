@@ -1,10 +1,7 @@
 {
   "profiles": {
-    "FromTestingBot": {
+    "Wecker": {
       "commandName": "Project"
-    },
-    "Order": {
-      "commandName": "Executable"
     }
   }
 }

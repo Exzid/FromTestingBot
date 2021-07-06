@@ -2,7 +2,7 @@
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace Order
+namespace Wecker
 {
     public static class OnCommand
     {

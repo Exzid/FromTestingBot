@@ -4,19 +4,19 @@ using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
 
-namespace Order
+namespace Wecker
 {
     class Program
     {
-        private static string connectionString = "mongodb://localhost";
+        private static readonly string connectionString = "mongodb://localhost";
 
         public static MongoClient mongo;
 
         const string token = "1803795947:AAH6g_h-_Z4MiaCSCCXEZXpVpw-VPoJFy9c";
-        static void Main(string[] args)
+        static void Main()
         {
             mongo = new MongoClient(connectionString);
-            TelegramBotClient Bot = new TelegramBotClient(token);
+            TelegramBotClient Bot = new(token);
            
             var me = Bot.GetMeAsync().Result;
             Console.WriteLine(
