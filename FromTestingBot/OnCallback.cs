@@ -5,8 +5,6 @@ using Telegram.Bot.Args;
 
 namespace Wecker
 {
-   
-
     class OnCallback
     {     
         public static void BotOnCallbackQuery(object sender, CallbackQueryEventArgs e)
@@ -16,13 +14,12 @@ namespace Wecker
             string[] arr = str.Split(' ');
             switch (arr[0])
             {
-                case "/workloadPersent":
-                    WorkloadCallback(e, arr[1]);
-                    e1.Message.Text = "/ok";
-                    break;
-                case "/availComAgree":
-                    AvailComAgreeCallback(e, arr[1]);
-                    e1.Message.Text = "/availComAgree";
+                case "/gender":
+                    if (arr.Length > 1)
+                    {
+                        SetGender(e1, arr[1]);
+                    }
+                    e1.Message.Text = "/editAge";
                     break;
                 default:
                     e1.Message.Text = e.CallbackQuery.Data;
@@ -30,18 +27,12 @@ namespace Wecker
             }          
             OnCommand.Bot_OnCommand(sender, e1);
         }
-
-        static async void WorkloadCallback(CallbackQueryEventArgs e, string num)
+        static async void SetGender(MessageEventArgs e, string gender)
         {
-            Console.WriteLine("WorkloadCallback: " + num);
-            var users = Program.mongo.GetDatabase("test").GetCollection<BsonDocument>("users");
-            //await users.UpdateOneAsync();
-        }
-
-        static async void AvailComAgreeCallback(CallbackQueryEventArgs e, string num)
-        {
-            Console.WriteLine("WorkloadCallback: " + num);
-            // Тут будут данные лететь в бд
+            BsonDocument filter = new BsonDocument("_id", e.Message.Chat.Id);
+            BsonDocument update = new BsonDocument("$set", new BsonDocument("gender", gender));
+            UpdateOptions options = new UpdateOptions { IsUpsert = true };
+            await Program.usersDb.UpdateOneAsync(filter, update, options);
         }
     }
 }

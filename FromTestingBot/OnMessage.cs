@@ -1,4 +1,7 @@
-﻿using System;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Driver;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +10,7 @@ using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using static Wecker.OnCommand;
 
 namespace Wecker
 {
@@ -14,6 +18,43 @@ namespace Wecker
     { 
         public static async void Bot_OnMessage(TelegramBotClient bot, MessageEventArgs e)
         {
+            BsonDocument filter = new BsonDocument("_id", e.Message.Chat.Id);
+            IFindFluent<BsonDocument, BsonDocument> waitAnswer = Program.waitDb.Find(filter);
+            if (waitAnswer.Count() != 0)
+            {
+                var result = await waitAnswer.FirstAsync();
+                string select;
+                string nextCommand;
+
+                switch (result.GetValue("nextIsAnswer").ToInt32())
+                {
+                    case (int)WaitToAnswer.EditName:
+                        select = "name";
+                        nextCommand = "/editGender";
+                        break;
+                    case (int)WaitToAnswer.EditAge:
+                        select = "age";
+                        nextCommand = "/editRegion";
+                        break;
+                    case (int)WaitToAnswer.EditRegion:
+                        select = "region";
+                        nextCommand = "/main";
+                        break;
+                    default:
+                        select = "errorOnMessage";
+                        nextCommand = "/main";
+                        break;
+                }
+
+                await Program.waitDb.DeleteOneAsync(filter);
+                BsonDocument update = new BsonDocument("$set", new BsonDocument(select, e.Message.Text));
+                UpdateOptions options = new UpdateOptions { IsUpsert = true };
+                await Program.usersDb.UpdateOneAsync(filter, update, options);
+                Console.WriteLine(nextCommand);
+                e.Message.Text = nextCommand;
+                Bot_OnCommand(bot, e);
+            }
+            else
             if (e.Message.Text != null)
             {
                 Console.WriteLine($"Received a text message in chat {e.Message.Chat.Id}.");

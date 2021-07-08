@@ -1,4 +1,7 @@
-﻿using Telegram.Bot;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
+using System;
+using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -6,39 +9,77 @@ namespace Wecker
 {
     public static class OnCommand
     {
+        static TelegramBotClient bot;
+        public enum WaitToAnswer 
+        {
+            No = 0,
+            EditName,
+            EditAge,
+            EditRegion
+        }
+
         public static async void Bot_OnCommand(object sender, MessageEventArgs e)
         {
-            TelegramBotClient bot = (TelegramBotClient)sender;
+            bot = (TelegramBotClient)sender;
             if (e.Message.Text != null && e.Message.Text[0] == '/')
             {
                 switch (e.Message.Text)
                 {
-                    case "/setting":
-                        settingCommand(bot, e);
+                    case "/start":
+                        Start(bot, e);
                         break;
-                    case "/help":
-                        helpCommand(bot, e);
+                    case "/editName":
+                        EditName(bot, e);
                         break;
-                    case "/workload":
-                        workloadCommand(bot, e);
+                    case "/editGender":
+                        EditGenderKeyboard(bot, e);
                         break;
-                    case "/availability":
-                        availabilityCommand(bot, e);
+                    case "/editAge":
+                        EditAgeKeyboard(bot, e);
                         break;
-                    case "/ok":
-                        okCommand(bot, e);
+                    case "/editRegion":
+                        EditRegionKeyboard(bot, e);
                         break;
-                    case "/availComAgree":
-                        availComAgreeCommand(bot, e);
+
+                    case "/main":
+                        MainKeyboard(bot, e);
                         break;
-                    case "/availCom":
-                        availComCommand(bot, e);
+                    case "/whoCall":
+                        WhoCallKeyboard(bot, e);
                         break;
-                    case "/Ktest":
-                        testCommand(bot, e);
+                    case "/call":
+                        CallKeyboard(bot, e);
+                        break;
+                    case "/stats":
+                        StatsKeyboard(bot, e);
+                        break;
+                    case "/endCallContact":
+                        EndCallContact(bot, e);
+                        break;
+                    case "/orderCallPerson":
+                        OrderCallPerson(bot, e);
+                        break;
+                    case "/orderCallBot":
+                        OrderCallBot(bot, e);
+                        break;
+                    case "/requestAccepted":
+                        RequestAccepted(bot, e);
+                        break;
+                    case "/endCallRate":
+                        EndCallRate(bot, e);
+                        break;
+                    case "/endCallGetContact":
+                        EndCallGetContact(bot, e);
+                        break;
+                    case "/OrderCallComment":
+                        OrderCallComment(bot, e);
+                        break;
+
+                    case "/developing":
+                        Developing(bot, e);
                         break;
                     default:
-                        defaultCommand(bot, e);
+                        Default(bot, e);
                         break;
                 }
             }
@@ -47,123 +88,373 @@ namespace Wecker
                 OnMessage.Bot_OnMessage(bot, e);
             }
         }
-        
-        static async void testCommand(TelegramBotClient bot, MessageEventArgs e)
-        {
-            ReplyKeyboardMarkup button = new ReplyKeyboardMarkup(
-                new [] 
-                { 
-                    new[]
-                    {
-                        new KeyboardButton("test"),
-                    },
-                    new[]
-                    {
-                        new KeyboardButton("tes3"),
-                        new KeyboardButton("test4")
-                    }                   
-                }, true, true);
-            await bot.SendTextMessageAsync(
-                chatId: e.Message.Chat,
-                text: "test",            
-                replyMarkup: button);
-        }
 
-        static async void settingCommand(TelegramBotClient bot, MessageEventArgs e)
+        ///
+        static async void WhoCallKeyboard(TelegramBotClient bot, MessageEventArgs e)
         {
-            var button = new InlineKeyboardMarkup(
-                new[]
+
+            var button = new InlineKeyboardMarkup(new[]
                 {
                     new[]
                         {
-                            InlineKeyboardButton.WithCallbackData("Загруженность", "/workload"),
-                            InlineKeyboardButton.WithCallbackData("Доступность", "/availability"),
+                            InlineKeyboardButton.WithCallbackData("Мужчина", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Женщина", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Бот", "/developing"),
                         },
                 });
+
             await bot.SendTextMessageAsync(
                 chatId: e.Message.Chat,
-                text: "Что вы хотите настроить?",
+                text: "Заказ звонка: Кто вам позвонит?",
                 replyMarkup: button);
         }
 
-        static async void workloadCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void CallKeyboard(TelegramBotClient bot, MessageEventArgs e)
+        {
+
+            var button = new InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Отказаться", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Главное меню", "main"),
+                        },
+
+                });
+
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text:  $"Имя: {"Всё"}"
+                     + $"Дата: {"Ещё"}"
+                     + $"Действие: {"В разработке"}",//developing
+                replyMarkup: button);
+        }
+
+        static async void StatsKeyboard(TelegramBotClient bot, MessageEventArgs e)
+        {
+
+            var button = new InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Главное меню", "/main"),
+                        },
+                });
+
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text: $"Исходящие: {"Всё"}"
+                     + $"Входящие: {"Ещё"}"
+                     + $"Рейтинг: {"В разработке"}",//developing
+                replyMarkup: button);
+        }
+
+        static async void EndCallContact(TelegramBotClient bot, MessageEventArgs e)
+        {
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text: "окончание звонка ( этот блок всё ещё в разработке )");//developing
+        }
+
+        static async void OrderCallPerson(TelegramBotClient bot, MessageEventArgs e)
+        {
+
+            var button = new InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Заказать звонок", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Позвонить", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Статистика", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Редактировать профиль", "/editName"),
+                        }
+                });
+
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text: "Выбор действия",
+                replyMarkup: button);
+        }
+
+        static async void OrderCallBot(TelegramBotClient bot, MessageEventArgs e)
+        {
+
+            var button = new InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Заказать звонок", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Позвонить", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Статистика", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Редактировать профиль", "/editName"),
+                        }
+                });
+
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text: "Выбор действия",
+                replyMarkup: button);
+        }
+
+        static async void RequestAccepted(TelegramBotClient bot, MessageEventArgs e)
+        {
+
+            var button = new InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Заказать звонок", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Позвонить", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Статистика", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Редактировать профиль", "/editName"),
+                        }
+                });
+
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text: "Выбор действия",
+                replyMarkup: button);
+        }
+
+        static async void EndCallRate(TelegramBotClient bot, MessageEventArgs e)
+        {
+
+            var button = new InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Заказать звонок", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Позвонить", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Статистика", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Редактировать профиль", "/editName"),
+                        }
+                });
+
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text: "Выбор действия",
+                replyMarkup: button);
+        }
+
+        static async void EndCallGetContact(TelegramBotClient bot, MessageEventArgs e)
+        {
+
+            var button = new InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Заказать звонок", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Позвонить", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Статистика", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Редактировать профиль", "/editName"),
+                        }
+                });
+
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text: "Выбор действия",
+                replyMarkup: button);
+        }
+
+        static async void OrderCallComment(TelegramBotClient bot, MessageEventArgs e)
+        {
+
+            var button = new InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Заказать звонок", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Позвонить", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Статистика", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Редактировать профиль", "/editName"),
+                        }
+                });
+
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text: "Выбор действия",
+                replyMarkup: button);
+        }
+        ///
+
+        static async void Start(TelegramBotClient bot, MessageEventArgs e)
         {
             var button = new InlineKeyboardMarkup(new[]
                 {
                     new[]
                         {
-                            InlineKeyboardButton.WithCallbackData("0%", "/workloadPersent 0"),
-                            InlineKeyboardButton.WithCallbackData("25%", "/workloadPersent 25"),
-                            InlineKeyboardButton.WithCallbackData("50%", "/workloadPersent 50"),
-                            InlineKeyboardButton.WithCallbackData("75%", "/workloadPersent 70"),
-                            InlineKeyboardButton.WithCallbackData("100%", "/workloadPersent 100")
-                        }   
-                });
-            await bot.SendTextMessageAsync(
-                chatId: e.Message.Chat,
-                text: "Укажите степень вашей загруженности",
-                replyMarkup: button);
-        }
-
-        static async void availabilityCommand(TelegramBotClient bot, MessageEventArgs e)
-        {          
-            var button = new InlineKeyboardMarkup(new[]
-                {
-                    new[]
-                        {
-                            InlineKeyboardButton.WithCallbackData("Не доступен", "/availComAgree 0"),
-                            InlineKeyboardButton.WithCallbackData("Частично доступен", "/availComAgree 1"),
-                            InlineKeyboardButton.WithCallbackData("На связи", "/availComAgree 10")
+                            InlineKeyboardButton.WithCallbackData("Продолжить", "/editName"),
                         }
                 });
             await bot.SendTextMessageAsync(
                 chatId: e.Message.Chat,
-                text: "Укажите вашу доступность на данный момент",
+                text: "Приветственное сообщение",
                 replyMarkup: button);
         }
 
-        static async void availComAgreeCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void MainKeyboard(TelegramBotClient bot, MessageEventArgs e)
+        {
+
+            var button = new InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Заказать звонок", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Позвонить", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Статистика", "/developing"),
+                        },
+                    new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Редактировать профиль", "/editName"),
+                        }       
+                });
+
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text:"Выбор действия",
+                replyMarkup: button);
+        }
+
+        static async void Developing(TelegramBotClient bot, MessageEventArgs e)
+        {
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text: "Данная команда находится на этапе разработки");
+        }
+
+        static async void EditName(TelegramBotClient bot, MessageEventArgs e)
+        {
+
+            BsonDocument filter = new BsonDocument("_id", e.Message.Chat.Id);
+            BsonDocument update = new BsonDocument("$set", new BsonDocument("nextIsAnswer", WaitToAnswer.EditName));
+            UpdateOptions options = new UpdateOptions { IsUpsert = true };
+
+            await Program.waitDb.UpdateOneAsync(filter, update, options);
+
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text: "Как вас зовут?");
+        }
+
+        static async void EditAgeKeyboard(TelegramBotClient bot, MessageEventArgs e)
+        {
+
+            BsonDocument filter = new BsonDocument("_id", e.Message.Chat.Id);
+            BsonDocument update = new BsonDocument("$set", new BsonDocument("nextIsAnswer", WaitToAnswer.EditAge));
+            UpdateOptions options = new UpdateOptions { IsUpsert = true };
+
+            await Program.waitDb.UpdateOneAsync(filter, update, options);
+
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text: "Введите свой возраст");
+        }
+
+        static async void EditRegionKeyboard(TelegramBotClient bot, MessageEventArgs e)
+        {
+
+            BsonDocument filter = new BsonDocument("_id", e.Message.Chat.Id);
+            BsonDocument update = new BsonDocument("$set", new BsonDocument("nextIsAnswer", WaitToAnswer.EditRegion));
+            UpdateOptions options = new UpdateOptions { IsUpsert = true };
+
+            await Program.waitDb.UpdateOneAsync(filter, update, options);
+
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text: "Введите свой регион");
+        }
+
+        static async void EditGenderKeyboard(TelegramBotClient bot, MessageEventArgs e)
         {
             var button = new InlineKeyboardMarkup(new[]
                 {
                     new[]
                         {
-                            InlineKeyboardButton.WithCallbackData("Да", "/availCom"),
-                            InlineKeyboardButton.WithCallbackData("Нет", "/ok"),
+                            InlineKeyboardButton.WithCallbackData("Мужчина", "/gender мужчина"),
+                            InlineKeyboardButton.WithCallbackData("Женщина", "/gender женщина"),
                         }
                 });
+
             await bot.SendTextMessageAsync(
                 chatId: e.Message.Chat,
-                text: "Хотите оставить подробности?",
+                text: "Укажите ваш пол",
                 replyMarkup: button);
         }
 
-        static async void availComCommand(TelegramBotClient bot, MessageEventArgs e)
-        {        
-            await bot.SendTextMessageAsync(
-                chatId: e.Message.Chat,
-                text: "Этот этап всё ещё в разработке");
-        }
-        
-        static async void okCommand(TelegramBotClient bot, MessageEventArgs e)
-        {
-            await bot.SendStickerAsync(
-                chatId: e.Message.Chat,
-                sticker: "CAACAgIAAxkBAAIBF2DjgBPLOAv_8NF9iD-U8kKgAAGa5AACVgADQbVWDNWTZQVPrTRWIAQ");
-        }
-
-        static async void helpCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void Default(TelegramBotClient bot, MessageEventArgs e)
         {
             await bot.SendTextMessageAsync(
                 chatId: e.Message.Chat,
-                text: "/test - ping bot/n");
-        }
-
-        static async void defaultCommand(TelegramBotClient bot, MessageEventArgs e)
-        {
-            await bot.SendTextMessageAsync(
-                chatId: e.Message.Chat,
-                text: "What did you commanded me??????");
+                text: "Я не знаю такой команды");
         }
     }
 }

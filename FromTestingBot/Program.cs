@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using System;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -9,13 +10,15 @@ namespace Wecker
     class Program
     {
         private static readonly string connectionString = "mongodb://localhost";
-
         public static MongoClient mongo;
-
-        const string token = "1803795947:AAH6g_h-_Z4MiaCSCCXEZXpVpw-VPoJFy9c";
+        public static MongoDB.Driver.IMongoCollection<BsonDocument> usersDb;
+        public static MongoDB.Driver.IMongoCollection<BsonDocument> waitDb;
+        const string token = "1838651577:AAE_PhuNZ4Fj9f3_ZbqtAq26apVHEIJ8h2g";
         static void Main()
         {
             mongo = new MongoClient(connectionString);
+            usersDb = Program.mongo.GetDatabase("Wecker").GetCollection<BsonDocument>("users");
+            waitDb = Program.mongo.GetDatabase("Wecker").GetCollection<BsonDocument>("wait");
             TelegramBotClient Bot = new(token);
            
             var me = Bot.GetMeAsync().Result;
