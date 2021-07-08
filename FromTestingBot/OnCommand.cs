@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using System.Collections.Generic;
+using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -14,31 +15,34 @@ namespace Order
                 switch (e.Message.Text)
                 {
                     case "/setting":
-                        settingCommand(bot, e);
+                        SettingCommand(bot, e);
                         break;
                     case "/help":
-                        helpCommand(bot, e);
+                        HelpCommand(bot, e);
                         break;
                     case "/workload":
-                        workloadCommand(bot, e);
+                        WorkloadCommand(bot, e);
                         break;
                     case "/availability":
-                        availabilityCommand(bot, e);
+                        AvailabilityCommand(bot, e);
                         break;
                     case "/ok":
-                        okCommand(bot, e);
+                        OkCommand(bot, e);
                         break;
                     case "/availComAgree":
-                        availComAgreeCommand(bot, e);
+                        AvailComAgreeCommand(bot, e);
                         break;
                     case "/availCom":
-                        availComCommand(bot, e);
+                        AvailComCommand(bot, e);
                         break;
-                    case "/Ktest":
-                        testCommand(bot, e);
+                    case "/test":
+                        TestCommand(bot, e);
+                        break;
+                    case "/pool":
+                        PoolCommand(bot, e);
                         break;
                     default:
-                        defaultCommand(bot, e);
+                        DefaultCommand(bot, e);
                         break;
                 }
             }
@@ -47,8 +51,20 @@ namespace Order
                 OnMessage.Bot_OnMessage(bot, e);
             }
         }
-        
-        static async void testCommand(TelegramBotClient bot, MessageEventArgs e)
+
+        static async void PoolCommand(TelegramBotClient bot, MessageEventArgs e)
+        {
+            List<string> options = new List<string>();
+            options.Add("неплохо");
+            options.Add("неочень");
+
+            await bot.SendPollAsync(chatId: e.Message.Chat,
+                question: "Как тебе тестовый опрос?",
+                options: options,
+                true);
+        }
+
+        static async void TestCommand(TelegramBotClient bot, MessageEventArgs e)
         {
             ReplyKeyboardMarkup button = new ReplyKeyboardMarkup(
                 new [] 
@@ -69,7 +85,7 @@ namespace Order
                 replyMarkup: button);
         }
 
-        static async void settingCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void SettingCommand(TelegramBotClient bot, MessageEventArgs e)
         {
             var button = new InlineKeyboardMarkup(
                 new[]
@@ -86,7 +102,7 @@ namespace Order
                 replyMarkup: button);
         }
 
-        static async void workloadCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void WorkloadCommand(TelegramBotClient bot, MessageEventArgs e)
         {
             var button = new InlineKeyboardMarkup(new[]
                 {
@@ -105,7 +121,7 @@ namespace Order
                 replyMarkup: button);
         }
 
-        static async void availabilityCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void AvailabilityCommand(TelegramBotClient bot, MessageEventArgs e)
         {          
             var button = new InlineKeyboardMarkup(new[]
                 {
@@ -122,7 +138,7 @@ namespace Order
                 replyMarkup: button);
         }
 
-        static async void availComAgreeCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void AvailComAgreeCommand(TelegramBotClient bot, MessageEventArgs e)
         {
             var button = new InlineKeyboardMarkup(new[]
                 {
@@ -138,28 +154,28 @@ namespace Order
                 replyMarkup: button);
         }
 
-        static async void availComCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void AvailComCommand(TelegramBotClient bot, MessageEventArgs e)
         {        
             await bot.SendTextMessageAsync(
                 chatId: e.Message.Chat,
                 text: "Этот этап всё ещё в разработке");
         }
         
-        static async void okCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void OkCommand(TelegramBotClient bot, MessageEventArgs e)
         {
             await bot.SendStickerAsync(
                 chatId: e.Message.Chat,
                 sticker: "CAACAgIAAxkBAAIBF2DjgBPLOAv_8NF9iD-U8kKgAAGa5AACVgADQbVWDNWTZQVPrTRWIAQ");
         }
 
-        static async void helpCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void HelpCommand(TelegramBotClient bot, MessageEventArgs e)
         {
             await bot.SendTextMessageAsync(
                 chatId: e.Message.Chat,
                 text: "/test - ping bot/n");
         }
 
-        static async void defaultCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void DefaultCommand(TelegramBotClient bot, MessageEventArgs e)
         {
             await bot.SendTextMessageAsync(
                 chatId: e.Message.Chat,
