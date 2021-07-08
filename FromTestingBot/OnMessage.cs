@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace Order
 {
@@ -16,8 +10,6 @@ namespace Order
         {
             if (e.Message.Text != null)
             {
-                Console.WriteLine($"Received a text message in chat {e.Message.Chat.Id}.");
-
                 await bot.SendTextMessageAsync(
                     chatId: e.Message.Chat,
                     text: "Это текст  :" + e.Message.Text
@@ -30,6 +22,7 @@ namespace Order
                     chatId: e.Message.Chat,
                     photo: e.Message.Photo[0].FileId,
                     caption: "пересылая обратно");
+
                 await bot.SendTextMessageAsync(
                     chatId: e.Message.Chat,
                     text: $"Это фото, его id: {e.Message.Photo[0].FileId}"

@@ -16,6 +16,7 @@ namespace Order
             MessageEventArgs e1 = new MessageEventArgs(e.CallbackQuery.Message);
             string str = e.CallbackQuery.Data;
             string[] arr = str.Split(' ');
+
             switch (arr[0])
             {
                 case "/workloadPersent":
@@ -39,26 +40,22 @@ namespace Order
         {
             Console.WriteLine("WorkloadCallback: " + num);
 
-            var users = Program.mongo.GetDatabase("test").GetCollection<BsonDocument>("users");
-
-            BsonDocument filter = new BsonDocument("_id", e.CallbackQuery.From.Id);
+            BsonDocument filter = new BsonDocument("_id", e.CallbackQuery.Message.Chat.Id);
             BsonDocument update = new BsonDocument("$set", new BsonDocument("workload", new BsonInt32(int.Parse(num))));
             UpdateOptions options = new UpdateOptions { IsUpsert = true };
 
-            await users.UpdateOneAsync(filter, update, options);
+            await Program.usersCollection.UpdateOneAsync(filter, update, options);
         }
 
         static async void AvailComAgreeCallback(CallbackQueryEventArgs e, string num)
         {
             Console.WriteLine("WorkloadCallback: " + num);
 
-            var users = Program.mongo.GetDatabase("test").GetCollection<BsonDocument>("users");
-
-            BsonDocument filter = new BsonDocument("_id", e.CallbackQuery.From.Id);
+            BsonDocument filter = new BsonDocument("_id", e.CallbackQuery.Message.Chat.Id);
             BsonDocument update = new BsonDocument("$set", new BsonDocument("availability", new BsonInt32(int.Parse(num))));
             UpdateOptions options = new UpdateOptions { IsUpsert = true };
 
-            await users.UpdateOneAsync(filter, update, options);
+            await Program.usersCollection.UpdateOneAsync(filter, update, options);
         }
     }
 }
