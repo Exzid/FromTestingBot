@@ -1,4 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using Order.Context;
+using Order.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -14,35 +19,14 @@ namespace Order
             {
                 switch (e.Message.Text)
                 {
-                    case "/setting":
-                        SettingCommand(bot, e);
+                    case "/start":
+                        Start(bot, e);
                         break;
-                    case "/help":
-                        HelpCommand(bot, e);
-                        break;
-                    case "/workload":
-                        WorkloadCommand(bot, e);
-                        break;
-                    case "/availability":
-                        AvailabilityCommand(bot, e);
-                        break;
-                    case "/ok":
-                        OkCommand(bot, e);
-                        break;
-                    case "/availComAgree":
-                        AvailComAgreeCommand(bot, e);
-                        break;
-                    case "/availCom":
-                        AvailComCommand(bot, e);
-                        break;
-                    case "/test":
-                        TestCommand(bot, e);
-                        break;
-                    case "/pool":
-                        PoolCommand(bot, e);
+                    case "/admin/users":
+                        AllUsers(bot, e);
                         break;
                     default:
-                        DefaultCommand(bot, e);
+                        Default(bot, e);
                         break;
                 }
             }
@@ -64,7 +48,7 @@ namespace Order
                 true);
         }
 
-        static async void TestCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void ReplyKeyboardMarkup(TelegramBotClient bot, MessageEventArgs e)
         {
             ReplyKeyboardMarkup button = new ReplyKeyboardMarkup(
                 new [] 
@@ -85,101 +69,51 @@ namespace Order
                 replyMarkup: button);
         }
 
-        static async void SettingCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void Default(TelegramBotClient bot, MessageEventArgs e)
         {
-            var button = new InlineKeyboardMarkup(
-                new[]
-                {
-                    new[]
-                        {
-                            InlineKeyboardButton.WithCallbackData("Загруженность", "/workload"),
-                            InlineKeyboardButton.WithCallbackData("Доступность", "/availability"),
-                        },
-                });
             await bot.SendTextMessageAsync(
                 chatId: e.Message.Chat,
-                text: "Что вы хотите настроить?",
-                replyMarkup: button);
+                text: "Я не знаю ткой команды");
         }
 
-        static async void WorkloadCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void Start(TelegramBotClient bot, MessageEventArgs e)
         {
-            var button = new InlineKeyboardMarkup(new[]
-                {
-                    new[]
-                        {
-                            InlineKeyboardButton.WithCallbackData("0%", "/workloadPersent 0"),
-                            InlineKeyboardButton.WithCallbackData("25%", "/workloadPersent 25"),
-                            InlineKeyboardButton.WithCallbackData("50%", "/workloadPersent 50"),
-                            InlineKeyboardButton.WithCallbackData("75%", "/workloadPersent 70"),
-                            InlineKeyboardButton.WithCallbackData("100%", "/workloadPersent 100")
-                        }   
-                });
+            using (ApplicationContext db = new ApplicationContext())
+            {
+                // создаем два объекта User
+                long test = e.Message.Chat.Id;
+                User user1 = new User { Id = e.Message.From.Id, IdChat = e.Message.Chat.Id, Name = e.Message.From.FirstName };
+
+                // добавляем их в бд
+                db.Users.Add(user1);
+                db.SaveChanges();
+                Console.WriteLine("Объекты успешно сохранены");
+            }
             await bot.SendTextMessageAsync(
                 chatId: e.Message.Chat,
-                text: "Укажите степень вашей загруженности",
-                replyMarkup: button);
+                text: "Добро пожаловать, я бот для тестирования");
         }
 
-        static async void AvailabilityCommand(TelegramBotClient bot, MessageEventArgs e)
-        {          
-            var button = new InlineKeyboardMarkup(new[]
-                {
-                    new[]
-                        {
-                            InlineKeyboardButton.WithCallbackData("Не доступен", "/availComAgree 0"),
-                            InlineKeyboardButton.WithCallbackData("Частично доступен", "/availComAgree 1"),
-                            InlineKeyboardButton.WithCallbackData("На связи", "/availComAgree 10")
-                        }
-                });
-            await bot.SendTextMessageAsync(
-                chatId: e.Message.Chat,
-                text: "Укажите вашу доступность на данный момент",
-                replyMarkup: button);
-        }
-
-        static async void AvailComAgreeCommand(TelegramBotClient bot, MessageEventArgs e)
+        static async void AllUsers(TelegramBotClient bot, MessageEventArgs e)
         {
-            var button = new InlineKeyboardMarkup(new[]
+            StringBuilder usersStr = new StringBuilder("Список подключенных пользователей: \n");
+            using (ApplicationContext db = new ApplicationContext())
+            {
+                // получаем объекты из бд и выводим на консоль
+                var users = db.Users.ToList();
+                
+                Console.WriteLine("Users list:");
+                foreach (User u in users)
                 {
-                    new[]
-                        {
-                            InlineKeyboardButton.WithCallbackData("Да", "/availCom"),
-                            InlineKeyboardButton.WithCallbackData("Нет", "/ok"),
-                        }
-                });
+                    usersStr.Append($"{u.Id}.{u.IdChat} - {u.Name} \n");
+                }
+            }
             await bot.SendTextMessageAsync(
                 chatId: e.Message.Chat,
-                text: "Хотите оставить подробности?",
-                replyMarkup: button);
+                text: usersStr.ToString());
         }
 
-        static async void AvailComCommand(TelegramBotClient bot, MessageEventArgs e)
-        {        
-            await bot.SendTextMessageAsync(
-                chatId: e.Message.Chat,
-                text: "Этот этап всё ещё в разработке");
-        }
+        // получаем объекты из бд и выводим на консоль   
         
-        static async void OkCommand(TelegramBotClient bot, MessageEventArgs e)
-        {
-            await bot.SendStickerAsync(
-                chatId: e.Message.Chat,
-                sticker: "CAACAgIAAxkBAAIBF2DjgBPLOAv_8NF9iD-U8kKgAAGa5AACVgADQbVWDNWTZQVPrTRWIAQ");
-        }
-
-        static async void HelpCommand(TelegramBotClient bot, MessageEventArgs e)
-        {
-            await bot.SendTextMessageAsync(
-                chatId: e.Message.Chat,
-                text: "/test - ping bot/n");
-        }
-
-        static async void DefaultCommand(TelegramBotClient bot, MessageEventArgs e)
-        {
-            await bot.SendTextMessageAsync(
-                chatId: e.Message.Chat,
-                text: "What did you commanded me??????");
-        }
     }
 }

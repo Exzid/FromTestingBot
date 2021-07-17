@@ -1,23 +1,20 @@
-﻿using System.Configuration;
-using MongoDB.Driver;
-using System;
+﻿using System;
 using Telegram.Bot;
-using MongoDB.Bson;
+using Order.Models;
+using Order.Context;
+using System.Linq;
+using System.Configuration;
 
 namespace Order
 {
     class Program
     {
-        public static MongoClient mongo;
         public static TelegramBotClient bot;
-        public static IMongoCollection<BsonDocument> usersCollection;
 
+        //static async void Main(string[] args)
         static void Main(string[] args)
         {
-            mongo = new MongoClient(ConfigurationManager.AppSettings.Get("mongoConStr"));      
             bot = new TelegramBotClient(ConfigurationManager.AppSettings.Get("BotToken"));
-            usersCollection = mongo.GetDatabase(ConfigurationManager.AppSettings.Get("Database"))
-                         .GetCollection<BsonDocument>("users");
 
             bot.OnMessage += OnCommand.Bot_OnCommand;
             bot.OnCallbackQuery += OnCallback.BotOnCallbackQuery;
