@@ -1,6 +1,9 @@
-﻿using System;
+﻿using Order.Context;
+using Order.Models;
+using System;
 using Telegram.Bot;
 using Telegram.Bot.Args;
+using static Order.Enums;
 
 namespace Order
 {
@@ -8,54 +11,27 @@ namespace Order
     { 
         public static async void Bot_OnMessage(TelegramBotClient bot, MessageEventArgs e)
         {
-            if (e.Message.Text != null)
+            using (ApplicationContext db = new ApplicationContext())
             {
-                await bot.SendTextMessageAsync(
-                    chatId: e.Message.Chat,
-                    text: "Это текст  :" + e.Message.Text
-                );
+                // получаем объекты из бд и выводим на консоль
+                User user = await db.Users.FindAsync(e.Message.From.Id);
+                switch (user.IsWait)
+                {
+                    case (int)WhatWait.Email:
+                        e.Message.Text = "/editEmail " + e.Message.Text;
+                        break;
+                    case (int)WhatWait.Phone:
+                        e.Message.Text = "/editPhone " + e.Message.Text;
+                        break;
+                    default:
+                        e.Message.Text = "/";
+                        break;
+                }
+                OnCommand.Bot_OnCommand(bot, e);
             }
-            else
-            if (e.Message.Photo != null)
-            {
-                await bot.SendPhotoAsync(
-                    chatId: e.Message.Chat,
-                    photo: e.Message.Photo[0].FileId,
-                    caption: "пересылая обратно");
-
-                await bot.SendTextMessageAsync(
-                    chatId: e.Message.Chat,
-                    text: $"Это фото, его id: {e.Message.Photo[0].FileId}"
-                );                
-            }
-            else
-            if (e.Message.Document != null)
-            {
-                await bot.SendDocumentAsync(
-                    chatId: e.Message.Chat,
-                    document: e.Message.Document.FileId
-                );
-                await bot.SendTextMessageAsync(
-                    chatId: e.Message.Chat,
-                    text: $"Это Документ, его id: {e.Message.Document.FileId}"
-                );               
-            }
-            else
-            if(e.Message.Sticker != null)
-            {
-                await bot.SendStickerAsync(
-                    chatId: e.Message.Chat,
-                    sticker: e.Message.Sticker.FileId);
-                await bot.SendTextMessageAsync(
-                    chatId: e.Message.Chat,
-                    text: $"id стикера: {e.Message.Sticker.FileId}");
-            }           
-            else
-            {
-                await bot.SendTextMessageAsync(
-                      chatId: e.Message.Chat,
-                      text: "не поддерживаю этот формат");
-            }
+            
         }
+
+        
     }
 }

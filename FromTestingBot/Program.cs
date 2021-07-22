@@ -4,6 +4,11 @@ using Order.Models;
 using Order.Context;
 using System.Linq;
 using System.Configuration;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Telegram.Bot.Types.Payments;
+using System.Threading;
+using Telegram.Bot.Types;
 
 namespace Order
 {
@@ -11,7 +16,6 @@ namespace Order
     {
         public static TelegramBotClient bot;
 
-        //static async void Main(string[] args)
         static void Main(string[] args)
         {
             bot = new TelegramBotClient(ConfigurationManager.AppSettings.Get("BotToken"));
@@ -19,6 +23,10 @@ namespace Order
             bot.OnMessage += OnCommand.Bot_OnCommand;
             bot.OnCallbackQuery += OnCallback.BotOnCallbackQuery;
             bot.OnReceiveError += OnError.BotOnError;
+            bot.OnUpdate += OnPaymentUpdate.Bot_OnUpdate;
+
+            //Timer timer = new Timer(CheckSub, bot, 0, 7200000);
+            Timer timer = new Timer(CheckSub, bot, 0, 2000);
 
             bot.StartReceiving();
 
@@ -27,6 +35,25 @@ namespace Order
 
             bot.StopReceiving();
         }
-        
-    }
+
+        public async static void CheckSub(object obj)
+        {
+            using (ApplicationContext db = new ApplicationContext())
+            {
+                TelegramBotClient bot = (TelegramBotClient)obj;
+                var users = db.Users.Where(u => u.IsActive == true && u.Subscription < DateTime.Now && u.IsAdmin == false).ToList();
+                foreach (Models.User u in users)
+                {
+                    u.IsActive = false;
+                    await bot.KickChatMemberAsync(
+                        chatId: new ChatId(ConfigurationManager.AppSettings.Get("ChatIdChannel")),
+                        userId: u.Id);
+                    await bot.SendTextMessageAsync(
+                        chatId: new ChatId(u.ChatId),
+                        text: "Ваша подписка закончилась, для продления введите /payments и выберите тариф");
+                    await db.SaveChangesAsync();
+                }
+            }
+        }
+    }      
 }

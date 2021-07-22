@@ -7,6 +7,7 @@ namespace Order.Context
     public class ApplicationContext : DbContext
     {
         public DbSet<User> Users { get; set; }
+        public DbSet<Rate> Rate { get; set; }
 
         public ApplicationContext()
         {

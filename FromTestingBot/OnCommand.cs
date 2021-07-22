@@ -2,11 +2,14 @@
 using Order.Models;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.ReplyMarkups;
+using Order.Commands;
+using Telegram.Bot.Types;
 
 namespace Order
 {
@@ -14,106 +17,82 @@ namespace Order
     {
         public static async void Bot_OnCommand(object sender, MessageEventArgs e)
         {
-            TelegramBotClient bot = (TelegramBotClient)sender;
-            if (e.Message.Text != null && e.Message.Text[0] == '/')
+            try
             {
-                switch (e.Message.Text)
+                TelegramBotClient bot = (TelegramBotClient)sender;
+                if (e.Message.Text != null && e.Message.Text[0] == '/')
                 {
-                    case "/start":
-                        Start(bot, e);
-                        break;
-                    case "/admin/users":
-                        AllUsers(bot, e);
-                        break;
-                    default:
-                        Default(bot, e);
-                        break;
+                    switch (e.Message.Text.Split(" ")[0])
+                    {
+                        //UserCommands
+                        case "/start":
+                            UserCommands.Start(bot, e);
+                            break;
+                        case "/cancel":
+                            UserCommands.Cancel(bot, e);
+                            break;
+                        //menu
+                        case "/menu":
+                            UserCommands.Menu(bot, e);
+                            break;
+                        case "/getData":
+                            UserCommands.GetData(bot, e);
+                            break;
+                        case "/editEmail":
+                            UserCommands.EditEmail(bot, e);
+                            break;
+                        case "/editPhone":
+                            UserCommands.EditPhone(bot, e);
+                            break;
+                        case "/infoChannel":
+                            UserCommands.InfoChannel(bot, e);
+                            break;
+                        case "/payments":
+                            UserCommands.Payments(bot, e);
+                            break;
+
+                        //offers
+                        case "/offer":
+                            UserCommands.Offer(bot, e);
+                            break;
+                        case "/rate":
+                            UserCommands.Rate(bot, e);
+                            break;
+
+                        //AdminCommands
+                        case "/admin/users":
+                            AdminCommands.AllUsers(bot, e);
+                            break;
+                        case "/admin/editRate":
+                            AdminCommands.EditRate(bot, e);
+                            break;
+                        case "/admin/addAdmin":
+                            AdminCommands.AddAdmin(bot, e);
+                            break;
+                        case "/admin/removeAdmin":
+                            AdminCommands.RemoveAdmin(bot, e);
+                            break;
+                        default:
+                            UserCommands.Default(bot, e);
+                            break;
+                    }
+                }
+                else
+                {
+                    if (e.Message.SuccessfulPayment != null)
+                    {
+                        UserCommands.SuccessfulPayment(bot, e);
+                    }
+                    else
+                    {
+                        OnMessage.Bot_OnMessage(bot, e);
+                    }
                 }
             }
-            else
+            catch
             {
-                OnMessage.Bot_OnMessage(bot, e);
+                Console.WriteLine("Произошла необработанная ошибка");
             }
         }
-
-        static async void PoolCommand(TelegramBotClient bot, MessageEventArgs e)
-        {
-            List<string> options = new List<string>();
-            options.Add("неплохо");
-            options.Add("неочень");
-
-            await bot.SendPollAsync(chatId: e.Message.Chat,
-                question: "Как тебе тестовый опрос?",
-                options: options,
-                true);
-        }
-
-        static async void ReplyKeyboardMarkup(TelegramBotClient bot, MessageEventArgs e)
-        {
-            ReplyKeyboardMarkup button = new ReplyKeyboardMarkup(
-                new [] 
-                { 
-                    new[]
-                    {
-                        new KeyboardButton("test"),
-                    },
-                    new[]
-                    {
-                        new KeyboardButton("tes3"),
-                        new KeyboardButton("test4")
-                    }                   
-                }, true, true);
-            await bot.SendTextMessageAsync(
-                chatId: e.Message.Chat,
-                text: "test",            
-                replyMarkup: button);
-        }
-
-        static async void Default(TelegramBotClient bot, MessageEventArgs e)
-        {
-            await bot.SendTextMessageAsync(
-                chatId: e.Message.Chat,
-                text: "Я не знаю ткой команды");
-        }
-
-        static async void Start(TelegramBotClient bot, MessageEventArgs e)
-        {
-            using (ApplicationContext db = new ApplicationContext())
-            {
-                // создаем два объекта User
-                long test = e.Message.Chat.Id;
-                User user1 = new User { Id = e.Message.From.Id, IdChat = e.Message.Chat.Id, Name = e.Message.From.FirstName };
-
-                // добавляем их в бд
-                db.Users.Add(user1);
-                db.SaveChanges();
-                Console.WriteLine("Объекты успешно сохранены");
-            }
-            await bot.SendTextMessageAsync(
-                chatId: e.Message.Chat,
-                text: "Добро пожаловать, я бот для тестирования");
-        }
-
-        static async void AllUsers(TelegramBotClient bot, MessageEventArgs e)
-        {
-            StringBuilder usersStr = new StringBuilder("Список подключенных пользователей: \n");
-            using (ApplicationContext db = new ApplicationContext())
-            {
-                // получаем объекты из бд и выводим на консоль
-                var users = db.Users.ToList();
-                
-                Console.WriteLine("Users list:");
-                foreach (User u in users)
-                {
-                    usersStr.Append($"{u.Id}.{u.IdChat} - {u.Name} \n");
-                }
-            }
-            await bot.SendTextMessageAsync(
-                chatId: e.Message.Chat,
-                text: usersStr.ToString());
-        }
-
-        // получаем объекты из бд и выводим на консоль   
-        
     }
 }
