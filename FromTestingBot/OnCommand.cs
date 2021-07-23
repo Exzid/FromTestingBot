@@ -17,17 +17,18 @@ namespace Order
     {
         public static async void Bot_OnCommand(object sender, MessageEventArgs e)
         {
-            try
-            {
+            
                 TelegramBotClient bot = (TelegramBotClient)sender;
                 if (e.Message.Text != null && e.Message.Text[0] == '/')
                 {
                     switch (e.Message.Text.Split(" ")[0])
                     {
                         //UserCommands
+
                         case "/start":
                             UserCommands.Start(bot, e);
                             break;
+                    
                         case "/cancel":
                             UserCommands.Cancel(bot, e);
                             break;
@@ -60,6 +61,9 @@ namespace Order
                             break;
 
                         //AdminCommands
+                        case "/test":
+                            AdminCommands.Test(bot, e);
+                            break;
                         case "/admin/users":
                             AdminCommands.AllUsers(bot, e);
                             break;
@@ -88,11 +92,6 @@ namespace Order
                         OnMessage.Bot_OnMessage(bot, e);
                     }
                 }
-            }
-            catch
-            {
-                Console.WriteLine("Произошла необработанная ошибка");
-            }
         }
     }
 }

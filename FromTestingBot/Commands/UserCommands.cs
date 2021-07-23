@@ -16,14 +16,14 @@ using static Order.Enums;
 namespace Order.Commands
 {
     public static class UserCommands
-    {
+    {        
         public static async void Start(TelegramBotClient bot, MessageEventArgs e)
         {
             using (ApplicationContext db = new ApplicationContext())
             {
                 long test = e.Message.Chat.Id;
                 Models.User user1 = new Models.User { Id = e.Message.From.Id, ChatId = e.Message.Chat.Id, Name = e.Message.From.FirstName, };
-                if (db.Users.Find(user1.Id) == null)
+                if (await db.Users.FindAsync(user1.ChatId) == null)
                 {
                     db.Users.Add(user1);
                     db.SaveChanges();
@@ -74,7 +74,7 @@ namespace Order.Commands
             switch (str.Length)
             {
                 case 1:
-                    WaitAnswer((int)WhatWait.Email, e.Message.Chat.Id);
+                    await WaitAnswer(bot, e, (int)WhatWait.Email);
                     text = "Введите ваш Email адрес";
                     break;
                 case 2:
@@ -83,10 +83,17 @@ namespace Order.Commands
                         using (ApplicationContext db = new ApplicationContext())
                         {
                             Models.User user = await db.Users.FindAsync(e.Message.From.Id);
-                            user.Email = str[1].ToLower();
-                            db.SaveChanges();
+                            if (user != null)
+                            {
+                                user.Email = str[1].ToLower();
+                                db.SaveChanges();
+                            }
+                            else
+                            {
+                                NotRegister(bot, e);
+                            }
                         }
-                        WaitAnswer((int)WhatWait.NoWait, e.Message.From.Id);
+                        await WaitAnswer(bot, e, (int)WhatWait.NoWait);
                         text = $"Ваш Email адрес \"{str[1]}\" был добавлен";
                     }
                     else
@@ -110,7 +117,7 @@ namespace Order.Commands
             switch (str.Length)
             {
                 case 1:
-                    WaitAnswer((int)WhatWait.Phone, e.Message.Chat.Id);
+                    await WaitAnswer(bot, e, (int)WhatWait.Phone);
                     text = "Введите ваш номер телефона";
                     break;
                 case 2:
@@ -119,10 +126,17 @@ namespace Order.Commands
                         using (ApplicationContext db = new ApplicationContext())
                         {
                             Models.User user = await db.Users.FindAsync(e.Message.From.Id);
-                            user.Phone = str[1];
-                            db.SaveChanges();
+                            if (user != null)
+                            {
+                                user.Phone = str[1];
+                                db.SaveChanges();
+                            }
+                            else
+                            {
+                                NotRegister(bot, e);
+                            }
                         }
-                        WaitAnswer((int)WhatWait.NoWait, e.Message.From.Id);
+                        await WaitAnswer(bot, e, (int)WhatWait.NoWait);
                         text = $"Ваш номер \"{str[1]}\" был добавлен";
                     }
                     else
@@ -144,7 +158,7 @@ namespace Order.Commands
             string text;
             using (ApplicationContext db = new ApplicationContext())
             {
-                Models.User user = db.Users.Where(u=>u.ChatId == e.Message.Chat.Id).ToList().First();
+                Models.User user = await db.Users.FindAsync(e.Message.Chat.Id);
                 if (user != null)
                 {
                     string str = user.IsActive ? user.Subscription.ToString() : "Недействительна";
@@ -174,7 +188,7 @@ namespace Order.Commands
 
         public static async void Cancel(TelegramBotClient bot, MessageEventArgs e)
         {
-            WaitAnswer(0, e.Message.Chat.Id);
+            await WaitAnswer(bot, e, (int)WhatWait.NoWait);
             await bot.SendTextMessageAsync(
                 chatId: e.Message.Chat,
                 text: "Ввод данных отменён");
@@ -185,9 +199,7 @@ namespace Order.Commands
             InlineKeyboardButton[][] rates;
             using (ApplicationContext db = new ApplicationContext())
             {
-                var rateSort = from rate in db.Rate.ToList()
-                               orderby rate.Id
-                               select rate;
+                var rateSort = db.Rate.ToList().OrderBy(u => u.Id);
 
                 rates = new InlineKeyboardButton[rateSort.Count()+1][];
                 int count = 0;
@@ -268,12 +280,13 @@ namespace Order.Commands
         {
             using (ApplicationContext db = new ApplicationContext())
             {
-                Models.User user = db.Users.ToList().Where(u => u.ChatId == e.Message.Chat.Id).First();
+                Models.User user = await db.Users.FindAsync(e.Message.Chat.Id);
+
                 Rate rate = db.Rate.ToList().Where(r => r.Price == e.Message.SuccessfulPayment.TotalAmount / 100).First();
 
                 user.IsActive = true;
                 user.Subscription = DateTime.Now.AddDays(rate.Period);
-                await db.SaveChangesAsync();
+                db.SaveChangesAsync();
 
                 ChatInviteLink result = await bot.CreateChatInviteLinkAsync(
                     chatId: ConfigurationManager.AppSettings.Get("ChatIdChannel"),
@@ -321,11 +334,18 @@ namespace Order.Commands
                 text: "Я не знаю такой команды");
         }
 
-        public static void WaitAnswer(int waitIndex, long id)
+        public static async void NotRegister(TelegramBotClient bot, MessageEventArgs e)
+        {
+            await bot.SendTextMessageAsync(
+                chatId: e.Message.Chat,
+                text: "Вы не заригистрованны в системе, отправте /start для продолжения");
+        }
+        
+        public static async Task WaitAnswer(TelegramBotClient bot, MessageEventArgs e, int waitIndex)
         {
             using (ApplicationContext db = new ApplicationContext())
             {
-                Models.User user = db.Users.Where(u => u.ChatId == id).First();
+                Models.User user = await db.Users.FindAsync(e.Message.Chat.Id);
                 if (user != null)
                 {
                     user.IsWait = waitIndex;
@@ -333,7 +353,7 @@ namespace Order.Commands
                 }
                 else
                 {
-                    Console.WriteLine("user is null");
+                    NotRegister(bot, e);
                 }
             }
         }

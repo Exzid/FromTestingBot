@@ -9,9 +9,10 @@ namespace Order.Models
 {
     public class User
     {
-        public long Id { get; set; }
-
+        [Key]
         public long ChatId { get; set; }
+
+        public long Id { get; set; }
         [MaxLength(50)]
         public string Name { get; set; }
         [MaxLength(50)]

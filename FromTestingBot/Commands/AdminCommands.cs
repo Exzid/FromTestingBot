@@ -8,15 +8,60 @@ using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 using static Order.Enums;
 
 namespace Order.Commands
 {
     class AdminCommands
     {
+        public static async void Test(TelegramBotClient bot, MessageEventArgs e)
+        {
+            try
+            {
+                if (await CheckAdmin(bot, e))
+                {
+
+
+                    ChatInviteLink result = await bot.CreateChatInviteLinkAsync(
+                            chatId: ConfigurationManager.AppSettings.Get("ChatIdChannel"),
+                            memberLimit: 1);
+
+                    var button = new InlineKeyboardMarkup(
+                        new[]
+                        {
+                        new[]
+                        {
+                            InlineKeyboardButton.WithUrl($"Продолжить", result.InviteLink)
+                        }
+                        });
+
+                    await bot.SendTextMessageAsync(
+                        chatId: e.Message.Chat,
+                        text: "Оплата подтверждна, нажмите продожить для перехода в канал",
+                        replyMarkup: button);
+
+                }
+                else
+                {
+                    await bot.SendTextMessageAsync(
+                        chatId: e.Message.Chat,
+                        text: "Вы не имеете доступа для выполнения данных команд");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("\n" + ex.StackTrace);
+                await bot.SendTextMessageAsync(
+                    chatId: e.Message.Chat,
+                    text: "К сожалению бот не подключен ни к одному каналу, мы сообщили об этой ошибки администраторов, просим прощения за предоставленные неудобства");
+            }
+        }
+
         public static async void AllUsers(TelegramBotClient bot, MessageEventArgs e)
         {
-            if (CheckAdmin(bot, e))
+            if (await CheckAdmin(bot, e))
             {
                 StringBuilder usersStr = new StringBuilder("Список подключенных пользователей: \n");
                 using (ApplicationContext db = new ApplicationContext())
@@ -25,7 +70,7 @@ namespace Order.Commands
                     var users = db.Users.ToList();
 
                     Console.WriteLine("Users list:");
-                    foreach (User u in users)
+                    foreach (Models.User u in users)
                     {
                         usersStr.Append($"{u.Id}.{u.ChatId} - {u.Name} \n");
                     }
@@ -44,7 +89,7 @@ namespace Order.Commands
 
         public static async void EditRate(TelegramBotClient bot, MessageEventArgs e)
         {
-            if (CheckAdmin(bot, e))
+            if (await CheckAdmin (bot, e))
             {
                 string[] args = e.Message.Text.Split(" ");
                 int id = 0;
@@ -61,7 +106,7 @@ namespace Order.Commands
 
                             using (ApplicationContext db = new ApplicationContext())
                             {
-                                Rate rate = db.Rate.Find(id);
+                                Rate rate = await db.Rate.FindAsync(id);
                                 await bot.SendTextMessageAsync(
                                     chatId: e.Message.Chat,
                                     text: $"Название тарифа: {rate.Name} Цена: {rate.Price} рублей");
@@ -108,11 +153,7 @@ namespace Order.Commands
                             ErrorFormat(bot, e, (int)ErrFormatCode.editRate);
                         }
                         break;
-                }
-
-                    
-                
-
+                } 
             }
             else
             {
@@ -156,7 +197,7 @@ namespace Order.Commands
 
         public static async void AddAdmin(TelegramBotClient bot, MessageEventArgs e)
         {
-            if (CheckAdmin(bot, e))
+            if (await CheckAdmin (bot, e))
             {
                 string[] args = e.Message.Text.Split(" ");
                 long id = 0;
@@ -167,7 +208,7 @@ namespace Order.Commands
                         {
                             using (ApplicationContext db = new ApplicationContext())
                             {
-                                User user = await db.Users.FindAsync(id);
+                                Models.User user = await db.Users.FindAsync(id);
                                 string text;
                                 if(user != null)
                                 {
@@ -204,7 +245,7 @@ namespace Order.Commands
 
         public static async void RemoveAdmin(TelegramBotClient bot, MessageEventArgs e)
         {
-            if (CheckAdmin(bot, e))
+            if (await CheckAdmin(bot, e))
             {
             string[] args = e.Message.Text.Split(" ");
             long id = 0;
@@ -215,7 +256,7 @@ namespace Order.Commands
                         {
                             using (ApplicationContext db = new ApplicationContext())
                             {
-                                User user = await db.Users.FindAsync(id);
+                                Models.User user = await db.Users.FindAsync(id);
                                 string text;
                                 if (user != null)
                                 {
@@ -250,28 +291,27 @@ namespace Order.Commands
             }
         }
 
-        public static bool CheckAdmin(TelegramBotClient bot, MessageEventArgs e)
+
+
+        //services
+        public static async Task<bool> CheckAdmin(TelegramBotClient bot, MessageEventArgs e)
         {
             using (ApplicationContext db = new ApplicationContext())
             {
-                User user = db.Users.Where(u => u.ChatId == e.Message.Chat.Id).First();
-                if (user.IsAdmin)
+                Models.User user = await db.Users.FindAsync(e.Message.Chat.Id);
+                if (user != null && user.IsAdmin)
                 {
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
-            }         
+                return false;
+            }
         }
 
-        //services
         public static async Task EditRate(int id, string name, int? price = null, int? period = null)
         {
             using (ApplicationContext db = new ApplicationContext())
             {
-                Rate rate = db.Rate.Find(id);
+                Rate rate = await db.Rate.FindAsync(id);
                 rate.Name = name;
                 if (price != null)
                 {

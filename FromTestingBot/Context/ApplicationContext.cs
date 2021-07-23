@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Order.Models;
+using System;
 using System.Configuration;
 
 namespace Order.Context
@@ -11,7 +12,19 @@ namespace Order.Context
 
         public ApplicationContext()
         {
-            Database.EnsureCreated();
+            try 
+            { 
+                Database.EnsureCreated();
+            }
+            catch (Npgsql.NpgsqlException e)
+            {
+                //Добавить логи
+                Console.WriteLine("catch in constructor!\n" + "Message pg: " + e.Message + "\n");
+            }
+            catch (System.Net.Sockets.SocketException e)
+            {
+                Console.WriteLine("Ошибка Dns при подключении к бд \n ");
+            }
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

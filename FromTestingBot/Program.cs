@@ -23,12 +23,14 @@ namespace Order
             bot.OnMessage += OnCommand.Bot_OnCommand;
             bot.OnCallbackQuery += OnCallback.BotOnCallbackQuery;
             bot.OnReceiveError += OnError.BotOnError;
+            bot.OnReceiveGeneralError += OnError.BotOnGeneralError;
             bot.OnUpdate += OnPaymentUpdate.Bot_OnUpdate;
 
             //Timer timer = new Timer(CheckSub, bot, 0, 7200000);
             Timer timer = new Timer(CheckSub, bot, 0, 2000);
-
+            
             bot.StartReceiving();
+
 
             Console.WriteLine("Press any key to exit");
             Console.ReadKey();
@@ -38,21 +40,28 @@ namespace Order
 
         public async static void CheckSub(object obj)
         {
-            using (ApplicationContext db = new ApplicationContext())
+            try
             {
-                TelegramBotClient bot = (TelegramBotClient)obj;
-                var users = db.Users.Where(u => u.IsActive == true && u.Subscription < DateTime.Now && u.IsAdmin == false).ToList();
-                foreach (Models.User u in users)
+                using (ApplicationContext db = new ApplicationContext())
                 {
-                    u.IsActive = false;
-                    await bot.KickChatMemberAsync(
-                        chatId: new ChatId(ConfigurationManager.AppSettings.Get("ChatIdChannel")),
-                        userId: u.Id);
-                    await bot.SendTextMessageAsync(
-                        chatId: new ChatId(u.ChatId),
-                        text: "Ваша подписка закончилась, для продления введите /payments и выберите тариф");
-                    await db.SaveChangesAsync();
+                    TelegramBotClient bot = (TelegramBotClient)obj;
+                    var users = db.Users.Where(u => u.IsActive == true && u.Subscription < DateTime.Now && u.IsAdmin == false).ToList();
+                    foreach (Models.User u in users)
+                    {
+                        u.IsActive = false;
+                        await bot.KickChatMemberAsync(
+                            chatId: new ChatId(ConfigurationManager.AppSettings.Get("ChatIdChannel")),
+                            userId: u.Id);
+                        await bot.SendTextMessageAsync(
+                            chatId: new ChatId(u.ChatId),
+                            text: "Ваша подписка закончилась, для продления введите /payments и выберите тариф");
+                        await db.SaveChangesAsync();
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("catch unable exception in CheckSub\n " + e.ToString());
             }
         }
     }      

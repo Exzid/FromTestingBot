@@ -1,4 +1,5 @@
-﻿using Order.Context;
+﻿using Order.Commands;
+using Order.Context;
 using Order.Models;
 using System;
 using Telegram.Bot;
@@ -15,19 +16,26 @@ namespace Order
             {
                 // получаем объекты из бд и выводим на консоль
                 User user = await db.Users.FindAsync(e.Message.From.Id);
-                switch (user.IsWait)
+                if (user != null)
                 {
-                    case (int)WhatWait.Email:
-                        e.Message.Text = "/editEmail " + e.Message.Text;
-                        break;
-                    case (int)WhatWait.Phone:
-                        e.Message.Text = "/editPhone " + e.Message.Text;
-                        break;
-                    default:
-                        e.Message.Text = "/";
-                        break;
+                    switch (user.IsWait)
+                    {
+                        case (int)WhatWait.Email:
+                            e.Message.Text = "/editEmail " + e.Message.Text;
+                            break;
+                        case (int)WhatWait.Phone:
+                            e.Message.Text = "/editPhone " + e.Message.Text;
+                            break;
+                        default:
+                            e.Message.Text = "/";
+                            break;
+                    }
+                    OnCommand.Bot_OnCommand(bot, e);
                 }
-                OnCommand.Bot_OnCommand(bot, e);
+                else
+                {
+                    UserCommands.NotRegister(bot, e);
+                }              
             }
             
         }
