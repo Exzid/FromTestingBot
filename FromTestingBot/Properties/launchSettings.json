@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "FromTestingBot": {
+      "commandName": "Project"
+    },
+    "Order": {
+      "commandName": "Executable"
+    }
+  }
+}
