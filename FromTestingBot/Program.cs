@@ -28,7 +28,7 @@ namespace Order
 
             //Timer timer = new Timer(CheckSub, bot, 0, 7200000);
             Timer timer = new Timer(CheckSub, bot, 0, 2000);
-            
+
             bot.StartReceiving();
 
 

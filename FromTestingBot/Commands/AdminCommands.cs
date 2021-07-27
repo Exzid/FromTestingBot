@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using static Order.Enums;
@@ -18,12 +19,11 @@ namespace Order.Commands
     {
         public static async void Test(TelegramBotClient bot, MessageEventArgs e)
         {
+            //Console.WriteLine(new System.Diagnostics.StackTrace());
             try
             {
                 if (await CheckAdmin(bot, e))
                 {
-
-
                     ChatInviteLink result = await bot.CreateChatInviteLinkAsync(
                             chatId: ConfigurationManager.AppSettings.Get("ChatIdChannel"),
                             memberLimit: 1);
@@ -50,13 +50,15 @@ namespace Order.Commands
                         text: "Вы не имеете доступа для выполнения данных команд");
                 }
             }
-            catch (Exception ex)
+            catch (ApiRequestException ex)
             {
-                Console.WriteLine("\n" + ex.StackTrace);
+                
+                Console.WriteLine("\n" + ex.ToString());
                 await bot.SendTextMessageAsync(
                     chatId: e.Message.Chat,
                     text: "К сожалению бот не подключен ни к одному каналу, мы сообщили об этой ошибки администраторов, просим прощения за предоставленные неудобства");
             }
+            
         }
 
         public static async void AllUsers(TelegramBotClient bot, MessageEventArgs e)
