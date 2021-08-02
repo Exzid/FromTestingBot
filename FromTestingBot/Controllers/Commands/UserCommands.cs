@@ -17,6 +17,7 @@ namespace Order.Commands
 {
     public static class UserCommands
     {        
+        //userProfile
         public static async void Start(TelegramBotClient bot, MessageEventArgs e)
         {
             using (ApplicationContext db = new ApplicationContext())
@@ -29,14 +30,17 @@ namespace Order.Commands
                     db.SaveChanges();
                 }
             }
+
             await bot.SendTextMessageAsync(
                 chatId: e.Message.Chat,
                 text: "Добро пожаловать, я бот для тестирования");
+
             Menu(bot, e);
         }
 
         public static async void Menu(TelegramBotClient bot, MessageEventArgs e)
         {
+
             var button = new InlineKeyboardMarkup(
                 new[]
                 {
@@ -74,7 +78,7 @@ namespace Order.Commands
             switch (str.Length)
             {
                 case 1:
-                    await WaitAnswer(bot, e, (int)WhatWait.Email);
+                    await Answer(bot, e, (int)UserWait.Email);
                     text = "Введите ваш Email адрес";
                     break;
                 case 2:
@@ -93,12 +97,12 @@ namespace Order.Commands
                                 NotRegister(bot, e);
                             }
                         }
-                        await WaitAnswer(bot, e, (int)WhatWait.NoWait);
+                        await Answer(bot, e, (int)UserWait.NoWait);
                         text = $"Ваш Email адрес \"{str[1]}\" был добавлен";
                     }
                     else
                     {
-                        text = ErrorFormat(bot, e, (int)WhatWait.Email);
+                        text = ErrorFormat(bot, e, (int)UserWait.Email);
                     }
                     break;
                 default:
@@ -117,7 +121,7 @@ namespace Order.Commands
             switch (str.Length)
             {
                 case 1:
-                    await WaitAnswer(bot, e, (int)WhatWait.Phone);
+                    await Answer(bot, e, (int)UserWait.Phone);
                     text = "Введите ваш номер телефона";
                     break;
                 case 2:
@@ -136,12 +140,12 @@ namespace Order.Commands
                                 NotRegister(bot, e);
                             }
                         }
-                        await WaitAnswer(bot, e, (int)WhatWait.NoWait);
+                        await Answer(bot, e, (int)UserWait.NoWait);
                         text = $"Ваш номер \"{str[1]}\" был добавлен";
                     }
                     else
                     {
-                        text = ErrorFormat(bot, e, (int)WhatWait.Phone);
+                        text = ErrorFormat(bot, e, (int)UserWait.Phone);
                     }
                     break;
                 default:
@@ -188,7 +192,7 @@ namespace Order.Commands
 
         public static async void Cancel(TelegramBotClient bot, MessageEventArgs e)
         {
-            await WaitAnswer(bot, e, (int)WhatWait.NoWait);
+            await Answer(bot, e, (int)UserWait.NoWait);
             await bot.SendTextMessageAsync(
                 chatId: e.Message.Chat,
                 text: "Ввод данных отменён");
@@ -308,16 +312,16 @@ namespace Order.Commands
             }
         }
 
-        //Сервисы
+        //services Имеется ввиду, методы ниже используются методами выше, но сами по себе не могут быть вызваны клиентом
         public static string ErrorFormat(TelegramBotClient bot, MessageEventArgs e, int waitIndex)
         {
             string text;
             switch (waitIndex)
             {
-                case (int)WhatWait.Phone:
+                case (int)UserWait.Phone:
                     text = "Неверный формат записи телефона";
                     break;
-                case (int)WhatWait.Email:
+                case (int)UserWait.Email:
                     text = "Неверный формат записи емейла";
                     break;
                 default:
@@ -341,7 +345,7 @@ namespace Order.Commands
                 text: "Вы не заригистрованны в системе, отправте /start для продолжения");
         }
         
-        public static async Task WaitAnswer(TelegramBotClient bot, MessageEventArgs e, int waitIndex)
+        public static async Task Answer(TelegramBotClient bot, MessageEventArgs e, int waitIndex)
         {
             using (ApplicationContext db = new ApplicationContext())
             {

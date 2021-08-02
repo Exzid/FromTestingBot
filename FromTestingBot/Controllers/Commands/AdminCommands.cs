@@ -16,7 +16,8 @@ namespace Order.Commands
 {
     class AdminCommands
     {
-        public static async void Test(TelegramBotClient bot, MessageEventArgs e)
+        //Данный метод сделан для обхода этапа оплаты для администраторов и для более удобного тестирования
+        public static async void GetLinkChannel(TelegramBotClient bot, MessageEventArgs e)
         {
             try
             {
@@ -164,37 +165,6 @@ namespace Order.Commands
 
         }
 
-        public static async void ErrorFormat(TelegramBotClient bot, MessageEventArgs e, int errFormat)
-        {
-            string text;
-            switch (errFormat)
-            {
-                case (int)ErrFormatCode.editRate:
-                    text = "Слишком мало аргументов или неверный формат записи\n\n" +
-                                "Информация о тарифе       /admin/editRate {id} \n" +
-                                "Пример                    /admin/editRate 1 \n\n" +
-                                "Изменение названия        /admin/editRate {id} {Name} \n" +
-                                "Пример                    /admin/editRate 1 Месячный \n\n" +
-                                "Изменение названия и цены /admin/editRate {id} {Name} {Price} \n" +
-                                "Пример                    /admin/editRate 1 Месячный 100 \n\n" +
-                                "Изменение названия и цены и периода /admin/editRate {id} {Name} {Price} {Period}\n" +
-                                "Пример                    /admin/editRate 1 Месячный 100 7 \n\n";
-                    break;
-                case (int)ErrFormatCode.addAdmin:
-                    text = "Ошибка формата добавление администратора";
-                    break;
-                case (int)ErrFormatCode.removeAdmin:
-                    text = "Ошибка формата удаления администратора";
-                    break;
-                default:
-                    text = "Ошибка формата";
-                    break;
-            }
-            await bot.SendTextMessageAsync(
-                            chatId: e.Message.Chat,
-                            text: text);
-        }
-
         public static async void AddAdmin(TelegramBotClient bot, MessageEventArgs e)
         {
             if (await CheckAdmin (bot, e))
@@ -291,9 +261,38 @@ namespace Order.Commands
             }
         }
 
+        //services Имеется ввиду, методы ниже используются методами выше, но сами по себе не могут быть вызваны клиентом
+        public static async void ErrorFormat(TelegramBotClient bot, MessageEventArgs e, int errFormat)
+        {
+            string text;
+            switch (errFormat)
+            {
+                case (int)ErrFormatCode.editRate:
+                    text = "Слишком мало аргументов или неверный формат записи\n\n" +
+                                "Информация о тарифе       /admin/editRate {id} \n" +
+                                "Пример                    /admin/editRate 1 \n\n" +
+                                "Изменение названия        /admin/editRate {id} {Name} \n" +
+                                "Пример                    /admin/editRate 1 Месячный \n\n" +
+                                "Изменение названия и цены /admin/editRate {id} {Name} {Price} \n" +
+                                "Пример                    /admin/editRate 1 Месячный 100 \n\n" +
+                                "Изменение названия и цены и периода /admin/editRate {id} {Name} {Price} {Period}\n" +
+                                "Пример                    /admin/editRate 1 Месячный 100 7 \n\n";
+                    break;
+                case (int)ErrFormatCode.addAdmin:
+                    text = "Ошибка формата добавление администратора";
+                    break;
+                case (int)ErrFormatCode.removeAdmin:
+                    text = "Ошибка формата удаления администратора";
+                    break;
+                default:
+                    text = "Ошибка формата";
+                    break;
+            }
+            await bot.SendTextMessageAsync(
+                            chatId: e.Message.Chat,
+                            text: text);
+        }
 
-
-        //services
         public static async Task<bool> CheckAdmin(TelegramBotClient bot, MessageEventArgs e)
         {
             using (ApplicationContext db = new ApplicationContext())

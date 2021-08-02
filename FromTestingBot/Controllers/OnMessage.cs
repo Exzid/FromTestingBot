@@ -14,16 +14,16 @@ namespace Order
         {
             using (ApplicationContext db = new ApplicationContext())
             {
-                // получаем объекты из бд и выводим на консоль
                 User user = await db.Users.FindAsync(e.Message.From.Id);
+                // Использую для проверки состояния пользователя
                 if (user != null)
                 {
                     switch (user.IsWait)
                     {
-                        case (int)WhatWait.Email:
+                        case (int)UserWait.Email:
                             e.Message.Text = "/editEmail " + e.Message.Text;
                             break;
-                        case (int)WhatWait.Phone:
+                        case (int)UserWait.Phone:
                             e.Message.Text = "/editPhone " + e.Message.Text;
                             break;
                         default:

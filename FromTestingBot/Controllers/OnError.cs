@@ -12,7 +12,7 @@ namespace Order
             TelegramBotClient bot = (TelegramBotClient)sender;
 
             StringBuilder error = new StringBuilder();
-            error.Append("ПРОИЗОШЛА ОШИБКА!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+            error.Append("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
             error.Append("ErrorCode: " + e.ApiRequestException.ErrorCode + "\n");           
             error.Append("Message: " + e.ApiRequestException.Message + "\n");
             error.Append("StackTrace: " + e.ApiRequestException.StackTrace + "\n");
@@ -32,9 +32,10 @@ namespace Order
             TelegramBotClient bot = (TelegramBotClient)sender;
 
             StringBuilder error = new StringBuilder();
-            error.Append("ПРОИЗОШЛА ОШИБКА!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+            error.Append("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
             error.Append("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
             Console.WriteLine(error.ToString());
+            // Так и не дошёл до этого события
         }       
     }
 }
