@@ -8,10 +8,10 @@ namespace Order
 {
     public static class Enums
     {
-        public enum WhatWait
+        public enum UserWait
         {
             NoWait = 0,
-            Email = 1,
+            Email,
             Phone
         }
         public enum ErrFormatCode

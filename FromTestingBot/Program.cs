@@ -1,35 +1,20 @@
 ﻿using System;
 using Telegram.Bot;
-using Order.Models;
-using Order.Context;
-using System.Linq;
-using System.Configuration;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Telegram.Bot.Types.Payments;
 using System.Threading;
-using Telegram.Bot.Types;
+using System.Collections.Generic;
 
 namespace Order
 {
     class Program
     {
-        public static TelegramBotClient bot;
 
         static void Main(string[] args)
         {
-            bot = new TelegramBotClient(ConfigurationManager.AppSettings.Get("BotToken"));
+            TelegramBotClient bot = Services.CreateBotOnConfiguring();
 
-            bot.OnMessage += OnCommand.Bot_OnCommand;
-            bot.OnCallbackQuery += OnCallback.BotOnCallbackQuery;
-            bot.OnReceiveError += OnError.BotOnError;
-            bot.OnReceiveGeneralError += OnError.BotOnGeneralError;
-            bot.OnUpdate += OnPaymentUpdate.Bot_OnUpdate;
-
-            //Timer timer = new Timer(CheckSub, bot, 0, 7200000);
-            Timer timer = new Timer(CheckSub, bot, 0, 2000);
+            Timer timer = new Timer(Services.CheckSub, bot, 0, 7200000);  //раз в 2 часа
             
-            bot.StartReceiving();
+            bot.StartReceiving(); //Можно сделать через вебхук, но на этапе разработки удобней пользоваться постоянным опросом
 
 
             Console.WriteLine("Press any key to exit");
@@ -38,31 +23,17 @@ namespace Order
             bot.StopReceiving();
         }
 
-        public async static void CheckSub(object obj)
-        {
-            try
-            {
-                using (ApplicationContext db = new ApplicationContext())
-                {
-                    TelegramBotClient bot = (TelegramBotClient)obj;
-                    var users = db.Users.Where(u => u.IsActive == true && u.Subscription < DateTime.Now && u.IsAdmin == false).ToList();
-                    foreach (Models.User u in users)
-                    {
-                        u.IsActive = false;
-                        await bot.KickChatMemberAsync(
-                            chatId: new ChatId(ConfigurationManager.AppSettings.Get("ChatIdChannel")),
-                            userId: u.Id);
-                        await bot.SendTextMessageAsync(
-                            chatId: new ChatId(u.ChatId),
-                            text: "Ваша подписка закончилась, для продления введите /payments и выберите тариф");
-                        await db.SaveChangesAsync();
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("catch unable exception in CheckSub\n " + e.ToString());
-            }
-        }
+        
     }      
 }
+// Я решил не сильно изменять код, ибо не думаю что буду этим пользоваться, а значит необоснованная трата времени
+// напишу свои мысли о том как можно улучшить код в плане чистоты (ну и если всё же он мне понадобиться, будет план действий для рефакторинга)
+
+// AdminCommands и UserCommands имеют одинаковые методы с одинаковой логикой работы, но зависят от разных типов состояний, стоит объединить их (DRY принцип хочется соблюдать) и ввести общий тип состояний 
+
+// Думаю кнопки можно генерировать в отдельном классе и использовать статические переменные, тогда контролеры станут тоньше
+// Равно как и перенести логику получения данных из контролера в модели
+
+// Во многих местах кода я использую switch я на самом деле даже не понимаю, будет ли такое использование являтся говнокодом (мои извинения, я хотел сказать грязным кодом) который стоит менять
+// К примеру в (папка Conrollers) OnCommand.Bot_OnCommand switch как по мне слишком раздут и хотелось бы его изменить, но с другой стороны это метод отвечающий за переадресацию в необходимый метод для обработки команды
+// Можно попробовать конечно запихать это всё в Dictionary<string, Action>, но в любом случае тогда при дополнении новыми командами, прийдётся лесть в определение словаря и видеть там тоже самое, так же и при отладки

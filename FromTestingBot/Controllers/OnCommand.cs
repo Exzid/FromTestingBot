@@ -1,15 +1,6 @@
-﻿using Order.Context;
-using Order.Models;
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Text;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Args;
-using Telegram.Bot.Types.ReplyMarkups;
 using Order.Commands;
-using Telegram.Bot.Types;
 
 namespace Order
 {
@@ -17,7 +8,7 @@ namespace Order
     {
         public static async void Bot_OnCommand(object sender, MessageEventArgs e)
         {
-            
+                
                 TelegramBotClient bot = (TelegramBotClient)sender;
                 if (e.Message.Text != null && e.Message.Text[0] == '/')
                 {
@@ -28,11 +19,11 @@ namespace Order
                         case "/start":
                             UserCommands.Start(bot, e);
                             break;
-                    
                         case "/cancel":
                             UserCommands.Cancel(bot, e);
                             break;
-                        //menu
+
+                            //menu
                         case "/menu":
                             UserCommands.Menu(bot, e);
                             break;
@@ -52,7 +43,7 @@ namespace Order
                             UserCommands.Payments(bot, e);
                             break;
 
-                        //offers
+                            //offers
                         case "/offer":
                             UserCommands.Offer(bot, e);
                             break;
@@ -61,8 +52,8 @@ namespace Order
                             break;
 
                         //AdminCommands
-                        case "/test":
-                            AdminCommands.Test(bot, e);
+                        case "/getLinkChannel":
+                            AdminCommands.GetLinkChannel(bot, e);
                             break;
                         case "/admin/users":
                             AdminCommands.AllUsers(bot, e);

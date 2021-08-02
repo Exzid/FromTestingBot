@@ -2,6 +2,7 @@
 using Order.Models;
 using System;
 using System.Configuration;
+using System.Net.Sockets;
 
 namespace Order.Context
 {
@@ -18,12 +19,11 @@ namespace Order.Context
             }
             catch (Npgsql.NpgsqlException e)
             {
-                //Добавить логи
                 Console.WriteLine("catch in constructor!\n" + "Message pg: " + e.Message + "\n");
             }
-            catch (System.Net.Sockets.SocketException e)
+            catch (SocketException e)
             {
-                Console.WriteLine("Ошибка Dns при подключении к бд \n ");
+                Console.WriteLine("Ошибка Dns при подключении к бд \n " + "Message: " + e.ToString() + "\n");
             }
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

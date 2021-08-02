@@ -13,13 +13,10 @@ namespace Order
             MessageEventArgs e1 = new MessageEventArgs(e.CallbackQuery.Message);
             TelegramBotClient bot = (TelegramBotClient)sender;
 
-            switch (e.CallbackQuery.Data)
-            {
-                default:
-                    e1.Message.Text = e.CallbackQuery.Data;
-                    OnCommand.Bot_OnCommand(sender, e1);
-                    break;
-            }
+            e1.Message.Text = e.CallbackQuery.Data;
+
+            OnCommand.Bot_OnCommand(sender, e1); //Колбеки отправляют команды, поэтому просто пересылаем их в другой метод
+
             await bot.AnswerCallbackQueryAsync(e.CallbackQuery.Id);
         }
     }
